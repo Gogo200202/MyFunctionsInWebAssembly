@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const getData = async () => {
+        const memory = new WebAssembly.Memory({ initial: 1 });
+
+        // // Logging function ($log) called from WebAssembly
+
+        function consoleLogString(offset, length) {
+          const bytes = new Uint8Array(memory.buffer, offset, length);
+          const string = new TextDecoder("utf8").decode(bytes);
+          console.log(string);
+        }
+
+        function printNumbers(number) {
+          console.log(number);
+        }
+        const importObject = {
+          console: { logString: consoleLogString, logNumbers: printNumbers },
+          use: { mem: memory },
+        };
+
+        let response = await fetch("test.wasm");
+        let arrayBuffer = await response.arrayBuffer();
+        let wasm = await WebAssembly.instantiate(arrayBuffer, importObject);
+        let instance = wasm.instance.exports;
+        let result = instance.print(5, 50);
+        instance.sayPedal();
+
+        instance.loop(1, 10);
+
+        console.log(result);
+      };
+      getData();
+    </script>
+  </body>
+</html>
